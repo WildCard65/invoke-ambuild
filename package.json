@@ -1,0 +1,33 @@
+{
+  "name": "invoke-ambuild",
+  "version": "1.0.0",
+  "description": "A GitHub action dedicated to invoking [AMBuild](https://github.com/alliedmodders/ambuild)",
+  "main": "index.js",
+  "scripts": {
+    "lint": "eslint index.js",
+    "package": "ncc build index.js -o dist"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/WildCard65/invoke-ambuild.git"
+  },
+  "keywords": [
+    "GitHub",
+    "Actions",
+    "JavaScript"
+  ],
+  "author": "WildCard65",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/WildCard65/invoke-ambuild/issues"
+  },
+  "homepage": "https://github.com/WildCard65/invoke-ambuild#readme",
+  "devDependencies": {
+    "@vercel/ncc": "^0.23.0",
+    "eslint": "^7.7.0"
+  },
+  "dependencies": {
+    "@actions/core": "^1.2.4",
+    "@actions/io": "^1.0.2"
+  }
+}

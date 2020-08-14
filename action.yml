@@ -1,0 +1,22 @@
+name: "Invoke AMBuild"
+description: "A GitHub action dedicated to invoking AMBuild."
+inputs:
+  install-ambuild:
+    description: "Should this action automatically install a copy of AMBuild?"
+    required: true
+    default: "true"
+  build-path:
+    description: "The folder where your project will be built."
+    required: true
+    default: "build"
+  project-root:
+    description: "The root directory containing your 'configure.py'"
+    required: true
+    default: "./"
+  delete-build:
+    description: "Delete the build output after completion."
+    required: false
+    default: "false"
+runs:
+  using: "node12"
+  main: "dist/index.js"
