@@ -1,20 +1,20 @@
-name: "Invoke AMBuild"
+name: "AMBuild"
 description: "A GitHub action dedicated to invoking AMBuild."
 inputs:
-  install-ambuild:
+  auto-install:
     description: "Should this action automatically install a copy of AMBuild?"
     required: true
     default: "true"
-  build-path:
-    description: "The folder where your project will be built."
+  build-folder:
+    description: "The name of the folder to execute the build in."
     required: true
     default: "build"
   project-root:
-    description: "The root directory containing your 'configure.py'"
+    description: "The root directory containing your 'configure.py'."
     required: true
     default: "./"
   delete-build:
-    description: "Delete the build output after completion."
+    description: "Should this action delete the build folder after the build completes?"
     required: false
     default: "false"
 runs:

@@ -1,4 +1,5 @@
 const node_path = require('path')
+const fs = require('fs');
 const { spawn } = require('child_process')
 
 const ga_io = require('@actions/io');
@@ -22,21 +23,21 @@ function getBoolean(value) {
 
 function failTheAction(error) {
     ga_core.setFailed(error);
-    process.exit(1);
+    process.exit(ga_core.ExitCode.Failure);
 }
 
-function onChildProcessExit(childProcess) {
+function onChildProcessExit(childProcess, taskName) {
     return new Promise((resolve, reject) => {
         childProcess.on('exit', (exitCode, signal) => {
             if (exitCode != 0) {
                 if (exitCode == null) {
                     if (signal == null)
-                        reject(new Error('Cloning of AMBuild has failed for an unknown reason'));
+                        reject(new Error(`${taskName} has failed for an unknown reason`));
                     else
-                        reject(new Error('Cloning of AMBuild has terminated by a signal: ' + signal));
+                        reject(new Error(`'${taskName} has terminated by a signal: ${signal}`));
                 }
                 else
-                    reject(new Error('Cloning of AMBuild has failed with exit code: ' + exitCode));
+                    reject(new Error(`${taskName} has failed with exit code: ${exitCode}`));
             }
             else
                 resolve(undefined);
@@ -54,12 +55,12 @@ async function installAMBuild() {
             cwd: action_dir,
             stdio: ['inherit', 'inherit', 'inherit'],
             detached: false,
-            shell: false,
+            shell: true,
             windowsVerbatimArguments: true,
             windowsHide: true
         });
 
-        await onChildProcessExit(clone_proc).catch(failTheAction);
+        await onChildProcessExit(clone_proc, 'Cloning of AMBuild').catch(failTheAction);
     }
 
     {
@@ -73,32 +74,25 @@ async function installAMBuild() {
             windowsHide: true
         });
 
-        await onChildProcessExit(install_proc).catch(failTheAction);
+        await onChildProcessExit(install_proc, 'Installation of AMBuild').catch(failTheAction);
     }
 }
 
-
-if (getBoolean(ga_core.getInput('install-ambuild', { required: true })))
-    installAMBuild();
-
-
 async function buildProject() {
-    const build_folder = ga_core.getInput('build-path', { required: true });
-    const project_root = ga_core.getInput('project-root', { required: true });
+    const build_dir = node_path.join(action_dir, ga_core.getInput('build-folder', { required: true }));
+    await ga_io.mkdirP(build_dir).catch(failTheAction);
 
-    const build_dir = node_path.join(action_dir, build_folder);
-    const configure_script = node_path.join(action_dir, project_root, 'configure.py');
-
-    ga_io.mkdirP(build_dir).catch(failTheAction);
-
-    var python_args = [configure_script];
+    var python_args = [node_path.join(action_dir, ga_core.getInput('project-root', { required: true }), 'configure.py')];
     {
         var script_args = ga_core.getInput('args', { required: false });
         if (script_args != null && script_args != '')
             python_args = python_args.concact(script_args.split(' '));
     }
 
-    console.log('Configuring the project for building');
+    await fs.promises.access(build_dir, fs.constants.F_OK).catch(failTheAction);
+
+    ga_core.info('Configuring the project for building');
+    ga_core.info(`> python ${python_args.join(' ')}`);
     const configure_proc = spawn('python', python_args, {
         cwd: build_dir,
         stdio: ['inherit', 'inherit', 'inherit'],
@@ -107,9 +101,10 @@ async function buildProject() {
         windowsVerbatimArguments: true,
         windowsHide: true
     });
-    await onChildProcessExit(configure_proc).catch(failTheAction);
+    await onChildProcessExit(configure_proc, 'Configuring the build').catch(failTheAction);
 
-    console.log('Executing the build process');
+    ga_core.info('Executing the build process');
+    ga_core.info('> ambuild');
     const build_proc = spawn('ambuild', undefined, {
         cwd: build_dir,
         stdio: ['inherit', 'inherit', 'inherit'],
@@ -118,12 +113,19 @@ async function buildProject() {
         windowsVerbatimArguments: true,
         windowsHide: true
     });
-    await onChildProcessExit(build_proc).catch(failTheAction);
+    await onChildProcessExit(build_proc, 'Running the build').catch(failTheAction);
 
     if (getBoolean(ga_core.getInput('delete-build', { required: false }))) {
-        console.log('Deleting the build output')
-        ga_io.rmRF(build_dir).catch((error) => { ga_core.setFailed(error) });
+        ga_core.info('Deleting the build output')
+        await ga_io.rmRF(build_dir).catch(failTheAction);
     }
 }
 
-buildProject();
+async function action_main() {
+    if (getBoolean(ga_core.getInput('auto-install', { required: true })))
+        await installAMBuild();
+
+    await buildProject();
+}
+
+action_main();
