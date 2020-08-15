@@ -1,7 +1,5 @@
 # vim: set sts=2 ts=8 sw=2 tw=99 et ft=python:
 builder.DetectCxx()
 program = builder.cxx.Program('test')
-program.sources += [
-  'main.cpp',
-]
+program.sources += [ 'main.cpp' ]
 builder.Add(program)
