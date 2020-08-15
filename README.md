@@ -23,7 +23,7 @@ Should this action delete the build folder after the build completes? Default: `
 ## Example usages
 
 ```yaml
-uses: WildCard65/invoke-ambuild@v1.0-fin
+uses: WildCard65/invoke-ambuild@v1.1-fin
 with:
   build-folder: out/bin/
   project-root: src/
@@ -31,7 +31,7 @@ with:
 ```
 
 ```yaml
-uses: WildCard65/invoke-ambuild@v1.0-fin
+uses: WildCard65/invoke-ambuild@v1.1-fin
 with:
   auto-install: false
 ```

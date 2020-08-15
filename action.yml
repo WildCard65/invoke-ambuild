@@ -1,5 +1,9 @@
-name: "AMBuild"
+name: "Invoke AMBuild"
 description: "A GitHub action dedicated to invoking AMBuild."
+branding:
+  icon: 'check-square'
+  color: 'green'
+
 inputs:
   auto-install:
     description: "Should this action automatically install a copy of AMBuild?"
@@ -20,3 +24,4 @@ inputs:
 runs:
   using: "node12"
   main: "dist/index.js"
+  
