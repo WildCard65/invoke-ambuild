@@ -1,8 +1,8 @@
 name: "Invoke AMBuild"
 description: "A GitHub action dedicated to invoking AMBuild."
 branding:
-  icon: 'check-square'
-  color: 'green'
+  icon: "check-square"
+  color: "green"
 
 inputs:
   auto-install:
@@ -17,6 +17,10 @@ inputs:
     description: "The root directory containing your 'configure.py'."
     required: true
     default: "./"
+  configure-args:
+    description: "Additional arguments to supply to 'configure.py'."
+    required: false
+    default: ""
   delete-build:
     description: "Should this action delete the build folder after the build completes?"
     required: false

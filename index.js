@@ -1,9 +1,8 @@
 const node_path = require('path')
-const fs = require('fs');
-const { spawn } = require('child_process')
 
 const ga_io = require('@actions/io');
 const ga_core = require('@actions/core');
+const ga_exec = require('@actions/exec')
 
 const action_dir = process.env.GITHUB_WORKSPACE;
 
@@ -21,111 +20,50 @@ function getBoolean(value) {
     }
 }
 
-function failTheAction(error) {
-    ga_core.setFailed(error);
-    process.exit(ga_core.ExitCode.Failure);
-}
-
-function onChildProcessExit(childProcess, taskName) {
-    return new Promise((resolve, reject) => {
-        childProcess.on('exit', (exitCode, signal) => {
-            if (exitCode != 0) {
-                if (exitCode == null) {
-                    if (signal == null)
-                        reject(new Error(`${taskName} has failed for an unknown reason`));
-                    else
-                        reject(new Error(`'${taskName} has terminated by a signal: ${signal}`));
-                }
-                else
-                    reject(new Error(`${taskName} has failed with exit code: ${exitCode}`));
-            }
-            else
-                resolve(undefined);
-        });
-        childProcess.on('error', (errorObj) => { reject(errorObj); });
-    });
-}
-
 async function installAMBuild() {
     const ambuild_dir = node_path.join(action_dir, 'ambuild');
+    const options = { cwd: action_dir, silent: false };
 
-    {
-        ga_core.info("Cloning AMBuild from 'https://github.com/alliedmodders/ambuild.git'");
-        const clone_proc = spawn('git', ['clone', 'https://github.com/alliedmodders/ambuild.git', ambuild_dir], {
-            cwd: action_dir,
-            stdio: ['inherit', 'inherit', 'inherit'],
-            detached: false,
-            shell: true,
-            windowsVerbatimArguments: true,
-            windowsHide: true
-        });
+    ga_core.startGroup('Downloading AMBuild');
+    await ga_exec.exec('git', ['clone', '--progress', 'https://github.com/alliedmodders/ambuild.git', ambuild_dir], options); // TODO: Should this be configurable?
+    ga_core.endGroup();
 
-        await onChildProcessExit(clone_proc, 'Cloning of AMBuild').catch(failTheAction);
-    }
-
-    {
-        ga_core.info('Installing AMBuild with PIP');
-        const install_proc = spawn('pip', ['install', ambuild_dir], {
-            cwd: action_dir,
-            stdio: ['inherit', 'inherit', 'inherit'],
-            detached: false,
-            shell: false,
-            windowsVerbatimArguments: true,
-            windowsHide: true
-        });
-
-        await onChildProcessExit(install_proc, 'Installation of AMBuild').catch(failTheAction);
-    }
+    ga_core.startGroup('Installing AMBuild with PIP');
+    await ga_exec.exec('pip', ['install', ambuild_dir], options);
+    ga_core.endGroup();
 }
 
 async function buildProject() {
-    const build_dir = node_path.join(action_dir, ga_core.getInput('build-folder', { required: true }));
-    await ga_io.mkdirP(build_dir).catch(failTheAction);
-
-    var python_args = [node_path.join(action_dir, ga_core.getInput('project-root', { required: true }), 'configure.py')];
-    {
-        var script_args = ga_core.getInput('args', { required: false });
-        if (script_args != null && script_args != '')
-            python_args = python_args.concact(script_args.split(' '));
-    }
-
-    await fs.promises.access(build_dir, fs.constants.F_OK).catch(failTheAction);
-
-    ga_core.info('Configuring the project for building');
-    ga_core.info(`> python ${python_args.join(' ')}`);
-    const configure_proc = spawn('python', python_args, {
-        cwd: build_dir,
-        stdio: ['inherit', 'inherit', 'inherit'],
-        detached: false,
-        shell: false,
-        windowsVerbatimArguments: true,
-        windowsHide: true
-    });
-    await onChildProcessExit(configure_proc, 'Configuring the build').catch(failTheAction);
-
-    ga_core.info('Executing the build process');
-    ga_core.info('> ambuild');
-    const build_proc = spawn('ambuild', undefined, {
-        cwd: build_dir,
-        stdio: ['inherit', 'inherit', 'inherit'],
-        detached: false,
-        shell: false,
-        windowsVerbatimArguments: true,
-        windowsHide: true
-    });
-    await onChildProcessExit(build_proc, 'Running the build').catch(failTheAction);
-
-    if (getBoolean(ga_core.getInput('delete-build', { required: false }))) {
-        ga_core.info('Deleting the build output')
-        await ga_io.rmRF(build_dir).catch(failTheAction);
-    }
-}
-
-async function action_main() {
     if (getBoolean(ga_core.getInput('auto-install', { required: true })))
         await installAMBuild();
 
-    await buildProject();
+    const build_dir = node_path.join(action_dir, ga_core.getInput('build-folder', { required: true }));
+    const options = { cwd: build_dir, silent: false };
+
+    await ga_io.mkdirP(build_dir);
+
+    var python_args = [node_path.join(action_dir, ga_core.getInput('project-root', { required: true }), 'configure.py')];
+    {
+        var script_args = ga_core.getInput('configure-args', { required: false });
+        if (script_args && script_args != '')
+            python_args = [...python_args, ...(script_args.split(' '))]
+    }
+
+    ga_core.startGroup('Configuring the project');
+    await ga_exec.exec('python', python_args, options);
+    ga_core.endGroup();
+
+    ga_core.startGroup('Building the project');
+    await ga_exec.exec('ambuild', undefined, options);
+    ga_core.endGroup();
+
+    if (getBoolean(ga_core.getInput('delete-build', { required: false }))) {
+        ga_core.info('Deleting the build output')
+        await ga_io.rmRF(build_dir);
+    }
 }
 
-action_main();
+buildProject().catch((reason) => {
+    ga_core.setFailed(reason);
+    process.exit(1);
+});

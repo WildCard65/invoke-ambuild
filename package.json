@@ -2,7 +2,7 @@
   "name": "invoke-ambuild",
   "version": "1.0.0",
   "description": "A GitHub action dedicated to invoking [AMBuild](https://github.com/alliedmodders/ambuild)",
-  "main": "index.js",
+  "main": "dist/index.js",
   "scripts": {
     "lint": "eslint index.js",
     "package": "ncc build index.js -o dist"
@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@actions/core": "^1.2.4",
+    "@actions/exec": "^1.0.4",
     "@actions/io": "^1.0.2"
   }
 }
