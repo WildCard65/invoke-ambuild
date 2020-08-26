@@ -42,6 +42,8 @@ module.exports =
 /******/ 		// Load entry module and return exports
 /******/ 		return __webpack_require__(932);
 /******/ 	};
+/******/ 	// initialize runtime
+/******/ 	runtime(__webpack_require__);
 /******/
 /******/ 	// run startup
 /******/ 	return startup();
@@ -1382,13 +1384,23 @@ module.exports = require("fs");
 /***/ }),
 
 /***/ 932:
-/***/ (function(__unusedmodule, __unusedexports, __webpack_require__) {
+/***/ (function(__unusedmodule, __webpack_exports__, __webpack_require__) {
 
-const node_path = __webpack_require__(622)
+"use strict";
+__webpack_require__.r(__webpack_exports__);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0__ = __webpack_require__(622);
+/* harmony import */ var path__WEBPACK_IMPORTED_MODULE_0___default = /*#__PURE__*/__webpack_require__.n(path__WEBPACK_IMPORTED_MODULE_0__);
+/* harmony import */ var _actions_io__WEBPACK_IMPORTED_MODULE_1__ = __webpack_require__(351);
+/* harmony import */ var _actions_io__WEBPACK_IMPORTED_MODULE_1___default = /*#__PURE__*/__webpack_require__.n(_actions_io__WEBPACK_IMPORTED_MODULE_1__);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_2__ = __webpack_require__(186);
+/* harmony import */ var _actions_core__WEBPACK_IMPORTED_MODULE_2___default = /*#__PURE__*/__webpack_require__.n(_actions_core__WEBPACK_IMPORTED_MODULE_2__);
+/* harmony import */ var _actions_exec__WEBPACK_IMPORTED_MODULE_3__ = __webpack_require__(514);
+/* harmony import */ var _actions_exec__WEBPACK_IMPORTED_MODULE_3___default = /*#__PURE__*/__webpack_require__.n(_actions_exec__WEBPACK_IMPORTED_MODULE_3__);
 
-const ga_io = __webpack_require__(351);
-const ga_core = __webpack_require__(186);
-const ga_exec = __webpack_require__(514)
+
+
+
+
 
 const action_dir = process.env.GITHUB_WORKSPACE;
 
@@ -1406,51 +1418,31 @@ function getBoolean(value) {
     }
 }
 
-async function installAMBuild() {
-    const ambuild_dir = node_path.join(action_dir, 'ambuild');
-    const options = { cwd: action_dir, silent: false };
-
-    ga_core.startGroup('Downloading AMBuild');
-    await ga_exec.exec('git', ['clone', '--progress', 'https://github.com/alliedmodders/ambuild.git', ambuild_dir], options); // TODO: Should this be configurable?
-    ga_core.endGroup();
-
-    ga_core.startGroup('Installing AMBuild with PIP');
-    await ga_exec.exec('pip', ['install', ambuild_dir], options);
-    ga_core.endGroup();
-}
-
-async function buildProject() {
-    if (getBoolean(ga_core.getInput('auto-install', { required: true })))
-        await installAMBuild();
-
-    const build_dir = node_path.join(action_dir, ga_core.getInput('build-folder', { required: true }));
+async function doAction() {
+    const build_dir = Object(path__WEBPACK_IMPORTED_MODULE_0__.join)(action_dir, Object(_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('build-folder', { required: true }));
     const options = { cwd: build_dir, silent: false };
 
-    await ga_io.mkdirP(build_dir);
+    await Object(_actions_io__WEBPACK_IMPORTED_MODULE_1__.mkdirP)(build_dir);
 
-    var python_args = [node_path.join(action_dir, ga_core.getInput('project-root', { required: true }), 'configure.py')];
+    var python_args = [Object(path__WEBPACK_IMPORTED_MODULE_0__.join)(action_dir, Object(_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('project-root', { required: true }), 'configure.py')];
     {
-        var script_args = ga_core.getInput('configure-args', { required: false });
+        var script_args = Object(_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('configure-args', { required: false });
         if (script_args && script_args != '')
             python_args = [...python_args, ...(script_args.split(' '))]
     }
 
-    ga_core.startGroup('Configuring the project');
-    await ga_exec.exec('python', python_args, options);
-    ga_core.endGroup();
+    // TODO: Implement annotation support.
+    await Object(_actions_core__WEBPACK_IMPORTED_MODULE_2__.group)('Configuring the project', async () => { await Object(_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('python', python_args, options); });
+    await Object(_actions_core__WEBPACK_IMPORTED_MODULE_2__.group)('Building the project', async () => { await Object(_actions_exec__WEBPACK_IMPORTED_MODULE_3__.exec)('ambuild', undefined, options); });
 
-    ga_core.startGroup('Building the project');
-    await ga_exec.exec('ambuild', undefined, options);
-    ga_core.endGroup();
-
-    if (getBoolean(ga_core.getInput('delete-build', { required: false }))) {
-        ga_core.info('Deleting the build output')
-        await ga_io.rmRF(build_dir);
+    if (getBoolean(Object(_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('delete-build', { required: false }))) {
+        Object(_actions_core__WEBPACK_IMPORTED_MODULE_2__.info)('Deleting the build output')
+        await Object(_actions_io__WEBPACK_IMPORTED_MODULE_1__.rmRF)(build_dir);
     }
 }
 
-buildProject().catch((reason) => {
-    ga_core.setFailed(reason);
+doAction().catch((reason) => {
+    Object(_actions_core__WEBPACK_IMPORTED_MODULE_2__.setFailed)(reason);
     process.exit(1);
 });
 
@@ -1659,4 +1651,43 @@ function isUnixExecutable(stats) {
 
 /***/ })
 
-/******/ });
+/******/ },
+/******/ function(__webpack_require__) { // webpackRuntimeModules
+/******/ 	"use strict";
+/******/ 
+/******/ 	/* webpack/runtime/make namespace object */
+/******/ 	!function() {
+/******/ 		// define __esModule on exports
+/******/ 		__webpack_require__.r = function(exports) {
+/******/ 			if(typeof Symbol !== 'undefined' && Symbol.toStringTag) {
+/******/ 				Object.defineProperty(exports, Symbol.toStringTag, { value: 'Module' });
+/******/ 			}
+/******/ 			Object.defineProperty(exports, '__esModule', { value: true });
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/compat get default export */
+/******/ 	!function() {
+/******/ 		// getDefaultExport function for compatibility with non-harmony modules
+/******/ 		__webpack_require__.n = function(module) {
+/******/ 			var getter = module && module.__esModule ?
+/******/ 				function getDefault() { return module['default']; } :
+/******/ 				function getModuleExports() { return module; };
+/******/ 			__webpack_require__.d(getter, 'a', getter);
+/******/ 			return getter;
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ 	/* webpack/runtime/define property getter */
+/******/ 	!function() {
+/******/ 		// define getter function for harmony exports
+/******/ 		var hasOwnProperty = Object.prototype.hasOwnProperty;
+/******/ 		__webpack_require__.d = function(exports, name, getter) {
+/******/ 			if(!hasOwnProperty.call(exports, name)) {
+/******/ 				Object.defineProperty(exports, name, { enumerable: true, get: getter });
+/******/ 			}
+/******/ 		};
+/******/ 	}();
+/******/ 	
+/******/ }
+);

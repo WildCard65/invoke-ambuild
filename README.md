@@ -1,20 +1,20 @@
 # Invoke AMBuild GitHub Action
 
-This action automates installing and invoking [AMBuild](https://github.com/alliedmodders/ambuild).
+This action automates invoking [AMBuild](https://github.com/alliedmodders/ambuild).
 
 ## Inputs
 
 ### `auto-install`
 
-**Required** Should this action automatically install a copy of AMBuild? Default `"true"`
+**REMOVED** This functionality can actually be done with `actions/checkout@v2`
 
 ### `build-folder`
 
-**Required** The name of the folder to execute the build in. Default: `"build"`
+The name of the folder to execute the build in. Default: `"build"`
 
 ### `project-root`
 
-**Required** The root directory containing your 'configure.py'. Default: `"./"`
+The root directory containing your 'configure.py'. Default: `"./"`
 
 ### `configure-args`
 
@@ -27,7 +27,7 @@ Should this action delete the build folder after the build completes? Default: `
 ## Example usages
 
 ```yaml
-uses: WildCard65/invoke-ambuild@v1.0-fin
+uses: WildCard65/invoke-ambuild@v1.1-fin
 with:
   build-folder: out/bin/
   project-root: src/
@@ -35,8 +35,7 @@ with:
 ```
 
 ```yaml
-uses: WildCard65/invoke-ambuild@v1.0-fin
+uses: WildCard65/invoke-ambuild@v1.1-fin
 with:
-  auto-install: false
   configure-args: --debug
 ```
