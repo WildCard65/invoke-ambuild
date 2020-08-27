@@ -1,18 +1,18 @@
 import { join } from 'path';
 
-import { mkdirP, rmRF } from '@actions/io';
-import { getInput, group, info, setFailed } from '@actions/core';
-import { exec } from '@actions/exec';
+const child_process = require('child_process');
+const readline = require('readline');
+
+const core = require('@actions/core');
+const io = require('@actions/io');
 const github = require('@actions/github');
 
-const action_dir = process.env.GITHUB_WORKSPACE;
 const IS_WINDOWS = process.platform == 'win32';
-const gmap = {error: 'failure', warning: 'warning'}
 
-const msvc_regex = new RegExp('^(.*)\\((\\d+)\\): (error|warning) \\S\\d+: (.*)$', 'igm');
-const gcc_regex = new RegExp('^(.*):(\\d+):\\d+: (warning|error): (.*\\[.*\\])$', 'igm');
+const msvc_regex = /^(.*)\((\d+)\): (error|warning) \S\d+: (.*)$/i;
+const gcc_regex = /^(.*):(\d+):\d+: (warning|error): (.*\[.*\])$/i;
 
-function getBoolean(value) {
+function asBoolean(value) {
     switch (value) {
         case true:
         case "true":
@@ -26,77 +26,121 @@ function getBoolean(value) {
     }
 }
 
-async function doAction() {
-    const ghc = new github.getOctokit(getInput('gh-token', { required: true }));
-    const { check_data } = await ghc.checks.create({
+function handleLine(logger, handler)
+{
+    return function(line) {
+        logger(line);
+        if (handler != null)
+            handler(line);
+    };
+}
+
+function waitForProcessExit(childProcess, handlers = { stdout: null, stderr: null })
+{
+    return new Promise((resolve, reject) => {
+        childProcess.on('close', (code, signal) => {
+            if (code != 0)
+            {
+                if (code == null)
+                    reject(new Error(`The child process has exited with signal ${signal}`));
+                else
+                    reject(new Error(`The child process has exited with exit code ${code}`));
+            }
+            else
+                resolve(code);
+        });
+        childProcess.on('error', (error) => reject(error));
+        readline.createInterface(childProcess.stdout).on('line', handleLine(core.info, handlers.stdout));
+        readline.createInterface(childProcess.stderr).on('line', handleLine(core.error, handlers.stderr));
+    });
+}
+async function buildProject() {
+    const root_folder = process.env.GITHUB_WORKSPACE;
+
+    const githubClient = github.getOctokit(core.getInput('gh-token', { required: true }));
+    const { check_data } = githubClient.checks.create({
         ...github.context.repo,
         name: github.context.action,
         head_sha: github.context.sha,
         started_at: new Date().toISOString(),
     });
+    core.debug(JSON.stringify(check_data));
 
-    const build_dir = join(action_dir, getInput('build-folder', { required: true }));
-    await mkdirP(build_dir);
+    const build_folder = join(root_folder, core.getInput('build-folder', { required: true }));
+    await io.mkdirP(build_folder);
 
-    var python_args = [join(action_dir, getInput('project-root', { required: true }), 'configure.py')];
+    var pythonArgs = [join(root_folder, core.getInput('project-root', { required: true }), 'configure.py')];
     {
-        var script_args = getInput('configure-args', { required: false });
-        if (script_args && script_args != '')
-            python_args = [...python_args, ...(script_args.split(' '))]
+        var configureArgs = core.getInput('configure-args', { required: false });
+        if (configureArgs && configureArgs != '')
+            pythonArgs = [...pythonArgs, ...(configureArgs.split(' '))]
     }
 
-    // TODO: Implement annotation support.
-    await group('Configuring the project', async () => { await exec('python', python_args, { cwd: build_dir, silent: false }); });
-    await group('Building the project', async () => {
-        var run_annotations = [];
 
-        await exec('ambuild', undefined, {
-            cwd: build_dir,
-            silent: false,
-            listensers: {
-                stderr: (data) => {
-                    const msg = data.toString();
-                    var rdata = [...msg.matchAll(gcc_regex)];
-                    if (rdata.length == 0 && IS_WINDOWS)
-                        rdata = [...msg.matchAll(msvc_regex)];
+    const procOptions = {
+        cwd: build_folder,
+        windowsHide: true,
+        shell: false
+    };
 
-                    rdata.forEach(element => {
-                        run_annotations.push({
-                            title: 'C/C++ Compile Error',
-                            path: element[1],
-                            start_line: element[2],
-                            end_line: element[2],
-                            annotation_level: gmap[element[3]],
-                            message: element[4],
-                            raw_details: element[0]
-                        });
-                    });
-                }
-            }
-        });
+    await core.group('Configuring the project', async () => {
+        var configureProc = child_process.exec('python', pythonArgs, procOptions);
+        try { await waitForProcessExit(configureProc); }
+        catch (error) { throw new Error(configureProc.stderr.toString()); }
+    });
 
-        if (run_annotations.length > 0) {
-            await ghc.checks.update({
-                ...github.context.repo,
-                check_run_id: check_data.id,
-                completed_at: new Date().toISOString(),
-                conclusion: 'neutral',
-                output: {
-                    title: github.context.action,
-                    summary: 'C/C++ Build VIA AMBuild',
-                    annotations: run_annotations
-                }
+    var build_annotations = [];
+    var build_failed = false;
+    var build_fail_reason = null;
+
+    const fill_annotations = function(line) {
+        var regRes = line.match(gcc_regex);
+        if (regRes == null && IS_WINDOWS)
+            regRes = line.match(msvc_regex);
+
+        if (regRes != null)
+        {
+            regRes[2] = Number(regRes[2]);
+            build_annotations.push({
+                path:regRes[1],
+                start_line: regRes[2],
+                end_line: regRes[2],
+                annotation_level: regRes[3] == 'warning' ? 'warning' : 'failure',
+                message: regRes[4]
             });
+        }
+    };
+
+    await core.group('Building the project', async () => {
+        var buildProc = child_process.exec('ambuild', undefined, procOptions);
+        try { await waitForProcessExit(buildProc, { stdout: fill_annotations, stderr: fill_annotations }); }
+        catch (error) {
+            build_failed = true;
+            build_fail_reason = error;
         }
     });
 
-    if (getBoolean(getInput('delete-build', { required: false }))) {
-        info('Deleting the build output')
-        await rmRF(build_dir);
+    if (!build_failed && asBoolean(core.getInput('delete-build', { required: false }))) {
+        core.info('Deleting the build output');
+        await io.rmRF(build_folder);
     }
+
+    const { update_data } = await githubClient.checks.update({
+        ...github.context.repo,
+        check_run_id: check_data.id,
+        completed_at: new Date().toISOString(),
+        status: 'completed',
+        conclusion: build_failed ? 'failure' : 'success',
+        output: {
+            title: github.context.action,
+            summary: 'C/C++ Build VIA AMBuild',
+            annotations: build_annotations
+        }
+    });
+    core.debug(JSON.stringify(update_data));
+
+    if (build_failed)
+        core.setFailed(build_fail_reason);
 }
 
-doAction().catch((reason) => {
-    setFailed(reason);
-    process.exit(1);
-});
+buildProject().catch((error) => core.setFailed(error));
