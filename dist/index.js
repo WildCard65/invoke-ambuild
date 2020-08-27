@@ -46,11 +46,11 @@ function getBoolean(value) {
 }
 
 async function doAction() {
-    const ghc = (0,_actions_github__WEBPACK_IMPORTED_MODULE_4__.getOctokit)((0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('gh-token', { required: true }));
+    const ghc = _actions_github__WEBPACK_IMPORTED_MODULE_4___default().getOctokit((0,_actions_core__WEBPACK_IMPORTED_MODULE_2__.getInput)('gh-token', { required: true }));
     const { check_data } = await ghc.checks.create({
-        ...github.context.repo,
-        name: github.context.action,
-        head_sha: github.context.sha,
+        ...(_actions_github__WEBPACK_IMPORTED_MODULE_4___default().context.repo),
+        name: (_actions_github__WEBPACK_IMPORTED_MODULE_4___default().context.action),
+        head_sha: (_actions_github__WEBPACK_IMPORTED_MODULE_4___default().context.sha),
         started_at: new Date().toString(),
     });
 
@@ -96,13 +96,13 @@ async function doAction() {
 
         if (fail_annotations.length > 0) {
             await ghc.checks.update({
-                ...github.context.repo,
+                ...(_actions_github__WEBPACK_IMPORTED_MODULE_4___default().context.repo),
                 check_run_id: check_data.id,
                 completed_at: new Date().toString(),
                 status: 'completed',
                 conclusion: 'failure',
                 output: {
-                    title: github.context.action,
+                    title: (_actions_github__WEBPACK_IMPORTED_MODULE_4___default().context.action),
                     summary: 'C/C++ Build VIA AMBuild',
                     annotations: fail_annotations
                 }
