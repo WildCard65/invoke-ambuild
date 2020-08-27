@@ -4,6 +4,10 @@ This action automates invoking [AMBuild](https://github.com/alliedmodders/ambuil
 
 ## Inputs
 
+### `gh-token`
+
+**REQUIRED** The GitHub token to use when posting annotations.
+
 ### `auto-install`
 
 **REMOVED** This functionality can actually be done with `actions/checkout@v2`
