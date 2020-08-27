@@ -32,7 +32,7 @@ async function doAction() {
         ...github.context.repo,
         name: github.context.action,
         head_sha: github.context.sha,
-        started_at: new Date().toString(),
+        started_at: new Date().toISOString(),
     });
 
     const build_dir = join(action_dir, getInput('build-folder', { required: true }));
@@ -79,7 +79,7 @@ async function doAction() {
             await ghc.checks.update({
                 ...github.context.repo,
                 check_run_id: check_data.id,
-                completed_at: new Date().toString(),
+                completed_at: new Date().toISOString(),
                 conclusion: 'neutral',
                 output: {
                     title: github.context.action,
