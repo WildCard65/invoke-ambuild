@@ -48,7 +48,7 @@ async function doAction() {
     // TODO: Implement annotation support.
     await group('Configuring the project', async () => { await exec('python', python_args, { cwd: build_dir, silent: false }); });
     await group('Building the project', async () => {
-        var fail_annotations = [];
+        var run_annotations = [];
 
         await exec('ambuild', undefined, {
             cwd: build_dir,
@@ -61,7 +61,7 @@ async function doAction() {
                         rdata = [...msg.matchAll(msvc_regex)];
 
                     rdata.forEach(element => {
-                        fail_annotations.push({
+                        run_annotations.push({
                             title: 'C/C++ Compile Error',
                             path: element[1],
                             start_line: element[2],
@@ -75,17 +75,16 @@ async function doAction() {
             }
         });
 
-        if (fail_annotations.length > 0) {
+        if (run_annotations.length > 0) {
             await ghc.checks.update({
                 ...github.context.repo,
                 check_run_id: check_data.id,
                 completed_at: new Date().toString(),
-                status: 'completed',
-                conclusion: 'failure',
+                conclusion: 'neutral',
                 output: {
                     title: github.context.action,
                     summary: 'C/C++ Build VIA AMBuild',
-                    annotations: fail_annotations
+                    annotations: run_annotations
                 }
             });
         }
