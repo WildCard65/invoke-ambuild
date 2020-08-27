@@ -3,7 +3,7 @@ import { join } from 'path';
 import { mkdirP, rmRF } from '@actions/io';
 import { getInput, group, info, setFailed } from '@actions/core';
 import { exec } from '@actions/exec';
-import { github } from '@actions/github'
+import { getOctokit } from '@actions/github';
 
 const action_dir = process.env.GITHUB_WORKSPACE;
 const IS_WINDOWS = process.platform == 'win32';
@@ -27,7 +27,7 @@ function getBoolean(value) {
 }
 
 async function doAction() {
-    const ghc = new github.Github(getInput('gh-token', { required: true }));
+    const ghc = getOctokit(getInput('gh-token', { required: true }));
     const { check_data } = await ghc.checks.create({
         ...github.context.repo,
         name: github.context.action,
