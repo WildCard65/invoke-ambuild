@@ -91,11 +91,12 @@ async function buildProject() {
     const procOptions = {
         cwd: build_folder,
         windowsHide: true,
+        detached: false,
         shell: false
     };
 
     await core.group('Configuring the project', async () => {
-        var configureProc = child_process.exec('python', pythonArgs, procOptions);
+        var configureProc = child_process.spawn('python', pythonArgs, procOptions);
         try { await waitForProcessExit(configureProc); }
         catch (error) { throw new Error(configureProc.stderr.toString()); }
     });
@@ -123,7 +124,7 @@ async function buildProject() {
     };
 
     await core.group('Building the project', async () => {
-        var buildProc = child_process.exec('ambuild', undefined, procOptions);
+        var buildProc = child_process.spawn('ambuild', undefined, procOptions);
         try { await waitForProcessExit(buildProc, { stdout: fill_annotations, stderr: fill_annotations }); }
         catch (error) {
             build_failed = true;
