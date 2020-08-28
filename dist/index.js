@@ -37,16 +37,15 @@ function asBoolean(value) {
     }
 }
 
-function handleLine(logger, handler)
+function injectHandler(cpIO, logger, handler)
 {
-    return function(line) {
-        logger(line);
-        if (handler != null)
-            handler(line);
-    };
+    if (handler != null)
+        readline.createInterface(cpIO).on('line', handler);
+    else
+        cpIO.on('data', logger);
 }
 
-function waitForProcessExit(childProcess, handlers = { stdout: null, stderr: null })
+function waitForProcessExit(childProcess, stdout=null, stderr=null)
 {
     return new Promise((resolve, reject) => {
         childProcess.on('close', (code, signal) => {
@@ -61,8 +60,8 @@ function waitForProcessExit(childProcess, handlers = { stdout: null, stderr: nul
                 resolve(code);
         });
         childProcess.on('error', (error) => reject(error));
-        readline.createInterface(childProcess.stdout).on('line', handleLine(core.info, handlers.stdout));
-        readline.createInterface(childProcess.stderr).on('line', handleLine(core.error, handlers.stderr));
+        injectHandler(childProcess.stdout, core.info, stdout);
+        injectHandler(childProcess.stderr, core.error, stderr);
     });
 }
 
@@ -129,7 +128,7 @@ async function buildProject() {
         await io.rmRF(build_folder);
     }
 
-    const { data } = githubClient.checks.update({
+    const update_info = {
         ...github.context.repo,
         check_run_id: github.context.runId,
         completed_at: new Date().toISOString(),
@@ -140,7 +139,10 @@ async function buildProject() {
             summary: 'C/C++ Build VIA AMBuild',
             annotations: build_result.annotations
         }
-    });
+    };
+
+    core.debug(`check-input: ${JSON.stringify(update_info)}`);
+    const { data } = await githubClient.checks.update(update_info);
     core.debug(`check-update: ${JSON.stringify(data)}`);
 
     if (build_result.failed)
