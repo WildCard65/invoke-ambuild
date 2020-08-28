@@ -108,9 +108,17 @@ async function buildProject() {
         if (regRes == null && IS_WINDOWS)
             regRes = line.match(msvc_regex);
 
+        core.debug(`Regex result: ${regRes}`);
         if (regRes != null)
         {
+            core.debug("Building an annotation!");
             regRes[2] = Number(regRes[2]);
+
+            if (regRes[3] == 'warning')
+                core.warning(regRes[0]);
+            else
+                core.error(regRes[0]);
+
             build_annotations.push({
                 path:regRes[1],
                 start_line: regRes[2],
@@ -135,6 +143,7 @@ async function buildProject() {
         await io.rmRF(build_folder);
     }
 
+    core.debug(build_annotations.join(' #|# '));
     const dbg_data_x ={
         ...github.context.repo,
         check_run_id: check_data.id,
