@@ -65,6 +65,13 @@ function waitForProcessExit(childProcess, handlers = { stdout: null, stderr: nul
         readline.createInterface(childProcess.stderr).on('line', handleLine(core.error, handlers.stderr));
     });
 }
+
+async function doOctokit(action, post_data)
+{
+    const { data } = await action(post_data);
+    return data;
+}
+
 async function buildProject() {
     const root_folder = process.env.GITHUB_WORKSPACE;
 
@@ -76,7 +83,7 @@ async function buildProject() {
         started_at: new Date().toISOString(),
     };
     core.debug(`invoke-ambuild: ${JSON.stringify(dbg_data)}`);
-    const check_data = githubClient.checks.create(dbg_data);
+    const check_data = await doOctokit(githubClient.checks.create, dbg_data);
     core.debug(`invoke-ambuild: ${JSON.stringify(check_data)}`);
 
     const build_folder = (0,path__WEBPACK_IMPORTED_MODULE_0__.join)(root_folder, core.getInput('build-folder', { required: true }));
@@ -152,7 +159,7 @@ async function buildProject() {
         }
     };
     core.debug(`invoke-ambuild: ${JSON.stringify(dbg_data_x)}`);
-    const update_data = await githubClient.checks.update(dbg_data_x);
+    const update_data = await doOctokit(githubClient.checks.update, dbg_data_x);
     core.debug(`invoke-ambuild: ${JSON.stringify(update_data)}`);
 
     if (build_failed)
