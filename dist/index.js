@@ -69,13 +69,15 @@ async function buildProject() {
     const root_folder = process.env.GITHUB_WORKSPACE;
 
     const githubClient = github.getOctokit(core.getInput('gh-token', { required: true }));
-    const { check_data } = githubClient.checks.create({
+    const dbg_data = {
         ...github.context.repo,
         name: github.context.action,
         head_sha: github.context.sha,
         started_at: new Date().toISOString(),
-    });
-    core.debug(JSON.stringify(check_data));
+    };
+    core.debug(`invoke-ambuild: ${JSON.stringify(dbg_data)}`);
+    const check_data = githubClient.checks.create(dbg_data);
+    core.debug(`invoke-ambuild: ${JSON.stringify(check_data)}`);
 
     const build_folder = (0,path__WEBPACK_IMPORTED_MODULE_0__.join)(root_folder, core.getInput('build-folder', { required: true }));
     await io.mkdirP(build_folder);
@@ -137,7 +139,7 @@ async function buildProject() {
         await io.rmRF(build_folder);
     }
 
-    const { update_data } = await githubClient.checks.update({
+    const dbg_data_x ={
         ...github.context.repo,
         check_run_id: check_data.id,
         completed_at: new Date().toISOString(),
@@ -148,8 +150,10 @@ async function buildProject() {
             summary: 'C/C++ Build VIA AMBuild',
             annotations: build_annotations
         }
-    });
-    core.debug(JSON.stringify(update_data));
+    };
+    core.debug(`invoke-ambuild: ${JSON.stringify(dbg_data_x)}`);
+    const update_data = await githubClient.checks.update(dbg_data_x);
+    core.debug(`invoke-ambuild: ${JSON.stringify(update_data)}`);
 
     if (build_failed)
         core.setFailed(build_fail_reason);
