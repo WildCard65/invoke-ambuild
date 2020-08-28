@@ -2,13 +2,11 @@
 
 This action automates invoking [AMBuild](https://github.com/alliedmodders/ambuild).
 
-## Environment
-
-### `GITHUB_TOKEN`
-
-**REQUIRED** The GitHub token to use, usually `${{ secrets.GITHUB_TOKEN }}`.
-
 ## Inputs
+
+### `repository-token`
+
+**REQUIRED** The GitHub token to use for check annotations, usually `${{ secrets.GITHUB_TOKEN }}`.
 
 ### `build-folder`
 

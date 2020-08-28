@@ -56,7 +56,7 @@ function waitForProcessExit(childProcess, handlers = { stdout: null, stderr: nul
 }
 
 async function buildProject() {
-    const githubClient = github.getOctokit(process.env.GITHUB_TOKEN);
+    const githubClient = github.getOctokit(core.getInput('repository-token', { required: true }));
 
     const root_folder = process.env.GITHUB_WORKSPACE;
     const build_folder = join(root_folder, core.getInput('build-folder', { required: true }));
