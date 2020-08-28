@@ -1,4 +1,4 @@
-import { join } from 'path';
+import { join, relative } from 'path';
 
 const child_process = require('child_process');
 const readline = require('readline');
@@ -55,113 +55,85 @@ function waitForProcessExit(childProcess, handlers = { stdout: null, stderr: nul
     });
 }
 
-async function doOctokit(action, post_data)
-{
-    const { data } = await action(post_data);
-    return data;
-}
-
 async function buildProject() {
+    const githubClient = github.getOctokit(process.env.GITHUB_TOKEN);
+
     const root_folder = process.env.GITHUB_WORKSPACE;
-
-    const githubClient = github.getOctokit(core.getInput('gh-token', { required: true }));
-    const dbg_data = {
-        ...github.context.repo,
-        name: github.context.action,
-        head_sha: github.context.sha,
-        started_at: new Date().toISOString(),
-    };
-    core.debug(`invoke-ambuild: ${JSON.stringify(dbg_data)}`);
-    const check_data = await doOctokit(githubClient.checks.create, dbg_data);
-    core.debug(`invoke-ambuild: ${JSON.stringify(check_data)}`);
-
     const build_folder = join(root_folder, core.getInput('build-folder', { required: true }));
     await io.mkdirP(build_folder);
 
-    var pythonArgs = [join(root_folder, core.getInput('project-root', { required: true }), 'configure.py')];
-    {
-        var configureArgs = core.getInput('configure-args', { required: false });
-        if (configureArgs && configureArgs != '')
-            pythonArgs = [...pythonArgs, ...(configureArgs.split(' '))]
-    }
-
-
-    const procOptions = {
+    const processOptions = {
         cwd: build_folder,
         windowsHide: true,
         detached: false,
         shell: false
     };
 
-    await core.group('Configuring the project', async () => {
-        var configureProc = child_process.spawn('python', pythonArgs, procOptions);
-        try { await waitForProcessExit(configureProc); }
-        catch (error) { throw new Error(configureProc.stderr.toString()); }
-    });
-
-    var build_annotations = [];
-    var build_failed = false;
-    var build_fail_reason = null;
-
-    const fill_annotations = function(line) {
-        var regRes = line.match(gcc_regex);
-        if (regRes == null && IS_WINDOWS)
-            regRes = line.match(msvc_regex);
-
-        core.debug(`Regex result: ${regRes}`);
-        if (regRes != null)
+    {
+        var pythonArgs = [relative(build_folder, join(root_folder, core.getInput('project-root', { required: true }), 'configure.py'))];
         {
-            core.debug("Building an annotation!");
-            regRes[2] = Number(regRes[2]);
-
-            if (regRes[3] == 'warning')
-                core.warning(regRes[0]);
-            else
-                core.error(regRes[0]);
-
-            build_annotations.push({
-                path:regRes[1],
-                start_line: regRes[2],
-                end_line: regRes[2],
-                annotation_level: regRes[3] == 'warning' ? 'warning' : 'failure',
-                message: regRes[4]
-            });
+            var configureArgs = core.getInput('configure-args', { required: false });
+            if (configureArgs && configureArgs != '')
+                pythonArgs = [...pythonArgs, ...(configureArgs.split(' '))]
         }
+        await core.group('Configuring the project', async () => {
+            var configureAction = child_process.spawn('python', pythonArgs, processOptions);
+            try { await waitForProcessExit(configureAction); }
+            catch (error) { throw new Error(configureAction.stderr.toString()); }
+        });
+    }
+
+    const build_result = {
+        failed: false,
+        annotations: []
     };
 
     await core.group('Building the project', async () => {
-        var buildProc = child_process.spawn('ambuild', undefined, procOptions);
-        try { await waitForProcessExit(buildProc, { stdout: fill_annotations, stderr: fill_annotations }); }
-        catch (error) {
-            build_failed = true;
-            build_fail_reason = error;
-        }
+        var buildProc = child_process.spawn('ambuild', undefined, processOptions);
+        try { await waitForProcessExit(buildProc, { stdout: (line) => {
+            var regexResult = line.match(gcc_regex);
+            if (regexResult == null && IS_WINDOWS)
+                regexResult = line.match(msvc_regex);
+
+            if (regexResult != null)
+            {
+                regexResult[1] = relative(root_folder, regexResult[1]);
+                regexResult[2] = Number(regexResult[2]);
+
+                build_result.annotations.push({
+                    path: regexResult[1],
+                    start_line: regexResult[2],
+                    end_line: regexResult[2],
+                    annotation_level: regexResult[3] == 'warning' ? 'warning' : 'failure',
+                    message: regexResult[0],
+                    title: `C/C++ Compiler ${regexResult[3] == 'warning' ? 'Warning' : 'Error'}`
+                })
+            }
+        }, stderr: null }); }
+        catch (error) { build_result.failed = true; }
     });
 
-    if (!build_failed && asBoolean(core.getInput('delete-build', { required: false }))) {
+    if (!build_result.failed && asBoolean(core.getInput('delete-build', { required: false }))) {
         core.info('Deleting the build output');
         await io.rmRF(build_folder);
     }
 
-    core.debug(build_annotations.join(' #|# '));
-    const dbg_data_x ={
+    const { data } = githubClient.checks.update({
         ...github.context.repo,
-        check_run_id: check_data.id,
+        check_run_id: github.context.runId,
         completed_at: new Date().toISOString(),
         status: 'completed',
-        conclusion: build_failed ? 'failure' : 'success',
+        conclusion: build_result.failed ? 'failure' : 'success',
         output: {
-            title: github.context.action,
+            title: github.context.eventName,
             summary: 'C/C++ Build VIA AMBuild',
-            annotations: build_annotations
+            annotations: build_result.annotations
         }
-    };
-    core.debug(`invoke-ambuild: ${JSON.stringify(dbg_data_x)}`);
-    const update_data = await doOctokit(githubClient.checks.update, dbg_data_x);
-    core.debug(`invoke-ambuild: ${JSON.stringify(update_data)}`);
+    });
+    core.debug(`check-update: ${JSON.stringify(data)}`);
 
-    if (build_failed)
-        core.setFailed(build_fail_reason);
+    if (build_result.failed)
+        process.exitCode = core.ExitCode.Failure;
 }
 
 buildProject().catch((error) => core.setFailed(error));

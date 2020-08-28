@@ -2,15 +2,13 @@
 
 This action automates invoking [AMBuild](https://github.com/alliedmodders/ambuild).
 
+## Environment
+
+### `GITHUB_TOKEN`
+
+**REQUIRED** The GitHub token to use, usually `${{ secrets.GITHUB_TOKEN }}`.
+
 ## Inputs
-
-### `gh-token`
-
-**REQUIRED** The GitHub token to use when posting annotations.
-
-### `auto-install`
-
-**REMOVED** This functionality can actually be done with `actions/checkout@v2`
 
 ### `build-folder`
 
@@ -31,7 +29,7 @@ Should this action delete the build folder after the build completes? Default: `
 ## Example usages
 
 ```yaml
-uses: WildCard65/invoke-ambuild@v1.1-fin
+uses: WildCard65/invoke-ambuild@master
 with:
   build-folder: out/bin/
   project-root: src/
@@ -39,7 +37,7 @@ with:
 ```
 
 ```yaml
-uses: WildCard65/invoke-ambuild@v1.1-fin
+uses: WildCard65/invoke-ambuild@master
 with:
   configure-args: --debug
 ```
