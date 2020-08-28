@@ -130,7 +130,7 @@ async function buildProject() {
 
     const update_info = {
         ...github.context.repo,
-        check_run_id: github.context.runId,
+        check_run_id: github.context.runNumber,
         completed_at: new Date().toISOString(),
         status: 'completed',
         conclusion: build_result.failed ? 'failure' : 'success',
