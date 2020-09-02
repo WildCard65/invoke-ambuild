@@ -11,7 +11,7 @@ updates:
     labels:
       - "\U0001F916 Dependency update"
       - AUTOMERGE
-    versioning-strategy: increase-if-necessary
+    versioning-strategy: increase
     commit-message:
       prefix: "#|DEPS|# "
       prefix-development: "#|DEV DEPS|# "
