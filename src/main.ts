@@ -1,10 +1,71 @@
 import * as path from 'path';
 
 import * as core from '@actions/core';
+import * as command from '@actions/core/lib/command';
 import * as exec from '@actions/exec';
 import * as io from '@actions/io';
 
-import * as utils from './utils';
+const IS_WINDOWS = process.platform == 'win32';
+const msvc_regex = /^(.*)\((\d+)(?:,(\d+))?\): (warning|error|fatal error) \S\d+: .*$/i;
+const gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*\[.*\]$/i;
+
+function asBoolean(input: string | number | boolean) {
+    switch (input) {
+        case true:
+        case 'true':
+        case 1:
+        case '1':
+        case 'on':
+        case 'yes':
+            return true;
+        default:
+            return false;
+    }
+}
+
+interface Properties {
+    file: string,
+    line: Number,
+    col?: Number | undefined
+};
+
+class Annotation {
+    file: string;
+    line: Number;
+    column: Number | -1;
+    is_warning: boolean;
+    message: string;
+
+    constructor(rootFolder: string, regexMatch: Array<any>) {
+        core.debug(`regexResult: ${regexMatch.toString()}`);
+
+        this.file = path.relative(rootFolder, regexMatch[1]);
+        this.line = Number(regexMatch[2]);
+        this.column = Number(regexMatch[3] || -1);
+        this.is_warning = regexMatch[4] == 'warning';
+        this.message = regexMatch[0];
+
+        core.debug(`Annotation object: ${JSON.stringify({
+            file: this.file,
+            line: this.line,
+            column: this.column,
+            is_warning: this.is_warning,
+            message: this.message
+        })}`);
+    }
+
+    public issue() {
+        let props: Properties = {
+            file: this.file,
+            line: this.line,
+        };
+        if (this.column >= 0)
+            props.col = this.column;
+
+        command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
+    }
+};
+
 
 async function buildProject() {
     const rootFolder = process.env.GITHUB_WORKSPACE || '.';
@@ -32,19 +93,25 @@ async function buildProject() {
 
     await core.group('Build the project', async () => {
         function issueAnnotation(data: string) {
-            let result = data.match(utils.gcc_regex);
-            if (!result && utils.IS_WINDOWS)
-                result = data.match(utils.msvc_regex);
+            let result = data.match(gcc_regex);
+            if (!result && IS_WINDOWS) {
+                core.debug('Switching to MSVC matching');
+                result = data.match(msvc_regex);
+            }
 
-            if (result)
-                new utils.Annotation(rootFolder, result).issue();
+            if (result) {
+                core.debug(`Regex result length: ${result.length}`);
+                core.debug(`Before annotation: ${result}`);
+
+                new Annotation(rootFolder, result).issue();
+            }
         }
 
         const buildOptions: exec.ExecOptions = {
             ...commonOptions,
             listeners: {
                 errline: issueAnnotation,
-                stdline: utils.IS_WINDOWS ? issueAnnotation : undefined
+                stdline: IS_WINDOWS ? issueAnnotation : undefined
             }
         };
 
@@ -56,7 +123,7 @@ async function buildProject() {
         }
     });
 
-    if (utils.asBoolean(core.getInput('delete-build'))) {
+    if (asBoolean(core.getInput('delete-build'))) {
         core.info('Deleting the build output');
         await io.rmRF(buildFolder);
     }

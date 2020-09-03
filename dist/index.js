@@ -1508,9 +1508,53 @@ var __importStar = (this && this.__importStar) || function (mod) {
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(186));
+const command = __importStar(__webpack_require__(351));
 const exec = __importStar(__webpack_require__(514));
 const io = __importStar(__webpack_require__(436));
-const utils = __importStar(__webpack_require__(314));
+const IS_WINDOWS = process.platform == 'win32';
+const msvc_regex = /^(.*)\((\d+)(?:,(\d+))?\): (warning|error|fatal error) \S\d+: .*$/i;
+const gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*\[.*\]$/i;
+function asBoolean(input) {
+    switch (input) {
+        case true:
+        case 'true':
+        case 1:
+        case '1':
+        case 'on':
+        case 'yes':
+            return true;
+        default:
+            return false;
+    }
+}
+;
+class Annotation {
+    constructor(rootFolder, regexMatch) {
+        core.debug(`regexResult: ${regexMatch.toString()}`);
+        this.file = path.relative(rootFolder, regexMatch[1]);
+        this.line = Number(regexMatch[2]);
+        this.column = Number(regexMatch[3] || -1);
+        this.is_warning = regexMatch[4] == 'warning';
+        this.message = regexMatch[0];
+        core.debug(`Annotation object: ${JSON.stringify({
+            file: this.file,
+            line: this.line,
+            column: this.column,
+            is_warning: this.is_warning,
+            message: this.message
+        })}`);
+    }
+    issue() {
+        let props = {
+            file: this.file,
+            line: this.line,
+        };
+        if (this.column >= 0)
+            props.col = this.column;
+        command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
+    }
+}
+;
 async function buildProject() {
     const rootFolder = process.env.GITHUB_WORKSPACE || '.';
     const buildFolder = path.join(rootFolder, core.getInput('build-folder', { required: true }));
@@ -1533,17 +1577,22 @@ async function buildProject() {
     });
     await core.group('Build the project', async () => {
         function issueAnnotation(data) {
-            let result = data.match(utils.gcc_regex);
-            if (!result && utils.IS_WINDOWS)
-                result = data.match(utils.msvc_regex);
-            if (result)
-                new utils.Annotation(rootFolder, result).issue();
+            let result = data.match(gcc_regex);
+            if (!result && IS_WINDOWS) {
+                core.debug('Switching to MSVC matching');
+                result = data.match(msvc_regex);
+            }
+            if (result) {
+                core.debug(`Regex result length: ${result.length}`);
+                core.debug(`Before annotation: ${result}`);
+                new Annotation(rootFolder, result).issue();
+            }
         }
         const buildOptions = {
             ...commonOptions,
             listeners: {
                 errline: issueAnnotation,
-                stdline: utils.IS_WINDOWS ? issueAnnotation : undefined
+                stdline: IS_WINDOWS ? issueAnnotation : undefined
             }
         };
         try {
@@ -1554,91 +1603,13 @@ async function buildProject() {
             return 1;
         }
     });
-    if (utils.asBoolean(core.getInput('delete-build'))) {
+    if (asBoolean(core.getInput('delete-build'))) {
         core.info('Deleting the build output');
         await io.rmRF(buildFolder);
     }
 }
 ;
 buildProject().catch((error) => core.setFailed(error));
-
-
-/***/ }),
-
-/***/ 314:
-/***/ (function(__unused_webpack_module, exports, __webpack_require__) {
-
-
-var __createBinding = (this && this.__createBinding) || (Object.create ? (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    Object.defineProperty(o, k2, { enumerable: true, get: function() { return m[k]; } });
-}) : (function(o, m, k, k2) {
-    if (k2 === undefined) k2 = k;
-    o[k2] = m[k];
-}));
-var __setModuleDefault = (this && this.__setModuleDefault) || (Object.create ? (function(o, v) {
-    Object.defineProperty(o, "default", { enumerable: true, value: v });
-}) : function(o, v) {
-    o["default"] = v;
-});
-var __importStar = (this && this.__importStar) || function (mod) {
-    if (mod && mod.__esModule) return mod;
-    var result = {};
-    if (mod != null) for (var k in mod) if (k !== "default" && Object.prototype.hasOwnProperty.call(mod, k)) __createBinding(result, mod, k);
-    __setModuleDefault(result, mod);
-    return result;
-};
-Object.defineProperty(exports, "__esModule", ({ value: true }));
-exports.Annotation = exports.asBoolean = exports.gcc_regex = exports.msvc_regex = exports.IS_WINDOWS = void 0;
-const path_1 = __webpack_require__(622);
-const core_1 = __webpack_require__(186);
-const command = __importStar(__webpack_require__(351));
-exports.IS_WINDOWS = process.platform == 'win32';
-exports.msvc_regex = /^(.*)\((\d+)(?:,(\d+))?\): (warning|error|fatal error) \S\d+: .*$/i;
-exports.gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*\[.*\]$/i;
-function asBoolean(input) {
-    switch (input) {
-        case true:
-        case 'true':
-        case 1:
-        case '1':
-        case 'on':
-        case 'yes':
-            return true;
-        default:
-            return false;
-    }
-}
-exports.asBoolean = asBoolean;
-;
-class Annotation {
-    constructor(rootFolder, regexMatch) {
-        core_1.debug(`regexResult: ${regexMatch.toString()}`);
-        this.file = path_1.relative(rootFolder, regexMatch[1]);
-        this.line = Number(regexMatch[2]);
-        this.column = Number(regexMatch[3] || -1);
-        this.is_warning = regexMatch[4] == 'warning';
-        this.message = regexMatch[0];
-        core_1.debug(`Annotation object: ${JSON.stringify({
-            file: this.file,
-            line: this.line,
-            column: this.column,
-            is_warning: this.is_warning,
-            message: this.message
-        })}`);
-    }
-    issue() {
-        let props = {
-            file: this.file,
-            line: this.line,
-        };
-        if (this.column >= 0)
-            props.col = this.column;
-        command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
-    }
-}
-exports.Annotation = Annotation;
-;
 
 
 /***/ }),
