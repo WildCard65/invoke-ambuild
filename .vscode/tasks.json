@@ -4,7 +4,9 @@
 		{
 			"type": "npm",
 			"script": "package",
-			"problemMatcher": [],
+			"problemMatcher": [
+				"$tsc"
+			],
 			"label": "npm: package",
 			"detail": "ncc build ./src/ts/main.ts -o dist"
 		}
