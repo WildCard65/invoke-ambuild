@@ -1,3 +1,6 @@
+import { relative } from 'path';
+
+import { debug } from '@actions/core';
 import * as command from '@actions/core/lib/command';
 
 export const IS_WINDOWS = process.platform == 'win32';
@@ -31,12 +34,22 @@ export class Annotation {
     is_warning: boolean;
     message: string;
 
-    constructor(regexMatch: Array<any>) {
-        this.file = regexMatch[1];
+    constructor(rootFolder: string, regexMatch: Array<any>) {
+        debug(`regexResult: ${regexMatch.toString()}`);
+
+        this.file = relative(rootFolder, regexMatch[1]);
         this.line = Number(regexMatch[2]);
         this.column = Number(regexMatch[3] || -1);
         this.is_warning = regexMatch[4] == 'warning';
         this.message = regexMatch[0];
+
+        debug(`Annotation object: ${JSON.stringify({
+            file: this.file,
+            line: this.line,
+            column: this.column,
+            is_warning: this.is_warning,
+            message: this.message
+        })}`);
     }
 
     public issue() {

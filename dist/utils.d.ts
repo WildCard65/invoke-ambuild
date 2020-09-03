@@ -8,6 +8,6 @@ export declare class Annotation {
     column: Number | -1;
     is_warning: boolean;
     message: string;
-    constructor(regexMatch: Array<any>);
+    constructor(rootFolder: string, regexMatch: Array<any>);
     issue(): void;
 }

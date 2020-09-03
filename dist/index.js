@@ -1512,8 +1512,8 @@ const exec = __importStar(__webpack_require__(514));
 const io = __importStar(__webpack_require__(436));
 const utils = __importStar(__webpack_require__(314));
 async function buildProject() {
-    const rootFolder = process.env.GITHUB_WORKSPACE;
-    const buildFolder = path.join(rootFolder || '.', core.getInput('build-folder', { required: true }));
+    const rootFolder = process.env.GITHUB_WORKSPACE || '.';
+    const buildFolder = path.join(rootFolder, core.getInput('build-folder', { required: true }));
     // Configure the common child process options.
     const commonOptions = {
         cwd: buildFolder,
@@ -1527,7 +1527,7 @@ async function buildProject() {
     let configureArgs = core.getInput('configure-args');
     await core.group('Configure the project', async () => {
         return await exec.exec('python', [
-            path.relative(buildFolder, path.join(rootFolder || '.', core.getInput('project-root', { required: true }), 'configure.py')),
+            path.relative(buildFolder, path.join(rootFolder, core.getInput('project-root', { required: true }), 'configure.py')),
             ...(configureArgs ? configureArgs.split(' ') : [])
         ], { ...commonOptions, ignoreReturnCode: true, failOnStdErr: true });
     });
@@ -1537,7 +1537,7 @@ async function buildProject() {
             if (!result && utils.IS_WINDOWS)
                 result = data.match(utils.msvc_regex);
             if (result)
-                new utils.Annotation(result).issue();
+                new utils.Annotation(rootFolder, result).issue();
         }
         const buildOptions = {
             ...commonOptions,
@@ -1548,7 +1548,7 @@ async function buildProject() {
         };
         return await exec.exec('ambuild', undefined, buildOptions);
     });
-    if (!utils.asBoolean(core.getInput('delete-build'))) {
+    if (utils.asBoolean(core.getInput('delete-build'))) {
         core.info('Deleting the build output');
         await io.rmRF(buildFolder);
     }
@@ -1584,6 +1584,8 @@ var __importStar = (this && this.__importStar) || function (mod) {
 };
 Object.defineProperty(exports, "__esModule", ({ value: true }));
 exports.Annotation = exports.asBoolean = exports.gcc_regex = exports.msvc_regex = exports.IS_WINDOWS = void 0;
+const path_1 = __webpack_require__(622);
+const core_1 = __webpack_require__(186);
 const command = __importStar(__webpack_require__(351));
 exports.IS_WINDOWS = process.platform == 'win32';
 exports.msvc_regex = /^(.*)\((\d+)\): (warning|error|fatal error) \S\d+: .*$/i;
@@ -1604,12 +1606,20 @@ function asBoolean(input) {
 exports.asBoolean = asBoolean;
 ;
 class Annotation {
-    constructor(regexMatch) {
-        this.file = regexMatch[1];
+    constructor(rootFolder, regexMatch) {
+        core_1.debug(`regexResult: ${regexMatch.toString()}`);
+        this.file = path_1.relative(rootFolder, regexMatch[1]);
         this.line = Number(regexMatch[2]);
         this.column = Number(regexMatch[3] || -1);
         this.is_warning = regexMatch[4] == 'warning';
         this.message = regexMatch[0];
+        core_1.debug(`Annotation object: ${JSON.stringify({
+            file: this.file,
+            line: this.line,
+            column: this.column,
+            is_warning: this.is_warning,
+            message: this.message
+        })}`);
     }
     issue() {
         let props = {

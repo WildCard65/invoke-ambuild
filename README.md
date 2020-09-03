@@ -4,10 +4,6 @@ This action automates invoking [AMBuild](https://github.com/alliedmodders/ambuil
 
 ## Inputs
 
-### `repository-token`
-
-**REQUIRED** The GitHub token to use for check annotations, usually `${{ secrets.GITHUB_TOKEN }}`.
-
 ### `build-folder`
 
 The name of the folder to execute the build in. Default: `"build"`

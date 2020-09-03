@@ -7,8 +7,8 @@ import * as io from '@actions/io';
 import * as utils from './utils';
 
 async function buildProject() {
-    const rootFolder = process.env.GITHUB_WORKSPACE;
-    const buildFolder = path.join(rootFolder || '.', core.getInput('build-folder', { required: true }));
+    const rootFolder = process.env.GITHUB_WORKSPACE || '.';
+    const buildFolder = path.join(rootFolder, core.getInput('build-folder', { required: true }));
 
     // Configure the common child process options.
     const commonOptions: exec.ExecOptions = {
@@ -25,7 +25,7 @@ async function buildProject() {
     let configureArgs = core.getInput('configure-args');
     await core.group('Configure the project', async () => {
         return await exec.exec('python', [
-            path.relative(buildFolder, path.join(rootFolder || '.', core.getInput('project-root', { required: true }), 'configure.py')),
+            path.relative(buildFolder, path.join(rootFolder, core.getInput('project-root', { required: true }), 'configure.py')),
             ...(configureArgs ? configureArgs.split(' ') : [])
         ], { ...commonOptions, ignoreReturnCode: true, failOnStdErr: true });
     });
@@ -37,7 +37,7 @@ async function buildProject() {
                 result = data.match(utils.msvc_regex);
 
             if (result)
-                new utils.Annotation(result).issue();
+                new utils.Annotation(rootFolder, result).issue();
         }
 
         const buildOptions: exec.ExecOptions = {
@@ -51,7 +51,7 @@ async function buildProject() {
         return await exec.exec('ambuild', undefined, buildOptions);
     });
 
-    if (!utils.asBoolean(core.getInput('delete-build'))) {
+    if (utils.asBoolean(core.getInput('delete-build'))) {
         core.info('Deleting the build output');
         await io.rmRF(buildFolder);
     }
