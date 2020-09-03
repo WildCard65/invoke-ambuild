@@ -1546,7 +1546,13 @@ async function buildProject() {
                 stdline: utils.IS_WINDOWS ? issueAnnotation : undefined
             }
         };
-        return await exec.exec('ambuild', undefined, buildOptions);
+        try {
+            return await exec.exec('ambuild', undefined, buildOptions);
+        }
+        catch {
+            process.exitCode = core.ExitCode.Failure;
+            return 1;
+        }
     });
     if (utils.asBoolean(core.getInput('delete-build'))) {
         core.info('Deleting the build output');
@@ -1588,8 +1594,8 @@ const path_1 = __webpack_require__(622);
 const core_1 = __webpack_require__(186);
 const command = __importStar(__webpack_require__(351));
 exports.IS_WINDOWS = process.platform == 'win32';
-exports.msvc_regex = /^(.*)\((\d+)\): (warning|error|fatal error) \S\d+: .*$/i;
-exports.gcc_regex = /^(.*):(\d+):\d+: (warning|error): .*\[.*\]$/i;
+exports.msvc_regex = /^(.*)\((\d+)(?:,(\d+))?\): (warning|error|fatal error) \S\d+: .*$/i;
+exports.gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*\[.*\]$/i;
 function asBoolean(input) {
     switch (input) {
         case true:

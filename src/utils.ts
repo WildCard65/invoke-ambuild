@@ -4,8 +4,8 @@ import { debug } from '@actions/core';
 import * as command from '@actions/core/lib/command';
 
 export const IS_WINDOWS = process.platform == 'win32';
-export const msvc_regex = /^(.*)\((\d+)\): (warning|error|fatal error) \S\d+: .*$/i;
-export const gcc_regex = /^(.*):(\d+):\d+: (warning|error): .*\[.*\]$/i;
+export const msvc_regex = /^(.*)\((\d+)(?:,(\d+))?\): (warning|error|fatal error) \S\d+: .*$/i;
+export const gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*\[.*\]$/i;
 
 export function asBoolean(input: string | number | boolean) {
     switch (input) {
