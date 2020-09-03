@@ -37,21 +37,11 @@ class Annotation {
     message: string;
 
     constructor(rootFolder: string, regexMatch: Array<any>) {
-        core.debug(`regexResult: ${regexMatch.toString()}`);
-
         this.file = path.relative(rootFolder, regexMatch[1]);
         this.line = Number(regexMatch[2]);
         this.column = Number(regexMatch[3] || -1);
         this.is_warning = regexMatch[4] == 'warning';
         this.message = regexMatch[0];
-
-        core.debug(`Annotation object: ${JSON.stringify({
-            file: this.file,
-            line: this.line,
-            column: this.column,
-            is_warning: this.is_warning,
-            message: this.message
-        })}`);
     }
 
     public issue() {
@@ -96,17 +86,11 @@ async function buildProject() {
     await core.group('Build the project', async () => {
         function issueAnnotation(data: string) {
             let result = data.match(gcc_regex);
-            if (!result && IS_WINDOWS) {
-                core.debug('Switching to MSVC matching');
+            if (!result && IS_WINDOWS)
                 result = data.match(msvc_regex);
-            }
 
-            if (result) {
-                core.debug(`Regex result length: ${result.length}`);
-                core.debug(`Before annotation: ${result}`);
-
+            if (result)
                 new Annotation(rootFolder, result).issue();
-            }
         }
 
         const buildOptions: exec.ExecOptions = {
@@ -117,12 +101,7 @@ async function buildProject() {
             }
         };
 
-        try {
-            return await exec.exec('ambuild', undefined, buildOptions);
-        } catch {
-            process.exitCode = core.ExitCode.Failure;
-            return 1;
-        }
+        return await exec.exec('ambuild', undefined, buildOptions);
     });
 
     if (asBoolean(core.getInput('delete-build'))) {
