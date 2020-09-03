@@ -1513,7 +1513,7 @@ const exec = __importStar(__webpack_require__(514));
 const io = __importStar(__webpack_require__(436));
 const IS_WINDOWS = process.platform == 'win32';
 const msvc_regex = /^(.*)\((\d+)(?:,(\d+))?\): (warning|error|fatal error) \S\d+: .*$/i;
-const gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*\[.*\]$/i;
+const gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*(?:\[.*\])?$/i;
 function asBoolean(input) {
     switch (input) {
         case true:

@@ -7,7 +7,7 @@ import * as io from '@actions/io';
 
 const IS_WINDOWS = process.platform == 'win32';
 const msvc_regex = /^(.*)\((\d+)(?:,(\d+))?\): (warning|error|fatal error) \S\d+: .*$/i;
-const gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*\[.*\]$/i;
+const gcc_regex = /^(.*):(\d+):(\d+): (warning|error): .*(?:\[.*\])?$/i;
 
 function asBoolean(input: string | number | boolean) {
     switch (input) {
