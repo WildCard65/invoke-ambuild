@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "lint": "eslint index.js",
-    "package": "ncc build index.js -o dist"
+    "package": "ncc build ./src/js/main.js -o dist"
   },
   "eslintConfig": {
     "extends": "eslint:recommended",
@@ -31,7 +31,10 @@
       "comma-dangle": "error"
     }
   },
-  "eslintIgnore": ["src/ts/*.ts", "dist/*.js"],
+  "eslintIgnore": [
+    "src/ts/*.ts",
+    "dist/*.js"
+  ],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/WildCard65/invoke-ambuild.git"
@@ -48,12 +51,15 @@
   },
   "homepage": "https://github.com/WildCard65/invoke-ambuild#readme",
   "devDependencies": {
+    "@tsconfig/node12": "^1.0.7",
+    "@types/node": "^14.6.3",
     "@vercel/ncc": "^0.24.0",
-    "eslint": "^7.7.0"
+    "eslint": "^7.7.0",
+    "typescript": "^4.0.2"
   },
   "dependencies": {
-    "@actions/core": "^1.2.4",
-    "@actions/github": "^4.0.0",
+    "@actions/core": "^1.2.5",
+    "@actions/exec": "^1.0.4",
     "@actions/io": "^1.0.2"
   }
 }
