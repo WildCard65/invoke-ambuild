@@ -1,0 +1,17 @@
+name: ESLint
+on: [push, pull_request]
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2.3.2
+      - uses: bradennapier/eslint-plus-action@v3.4.2
+        with:
+          issueSummary: true
+          reportSuggestions: true
+          reportIgnoredFiles: true
+          extensions: .ts
+          useEslintrc: true
+          useEslintIgnore: true
+          includeGlob: "src/*"
+          configFile: ./package.json
