@@ -73,7 +73,7 @@ async function buildProject() {
         {
             var configureArgs = core.getInput('configure-args', { required: false });
             if (configureArgs && configureArgs != '')
-                pythonArgs = [...pythonArgs, ...(configureArgs.split(' '))]
+                pythonArgs = [...pythonArgs, ...(configureArgs.split(' '))];
         }
         await core.group('Configuring the project', async () => {
             var configureAction = child_process.spawn('python', pythonArgs, processOptions);
@@ -106,7 +106,7 @@ async function buildProject() {
                     annotation_level: regexResult[3] == 'warning' ? 'warning' : 'failure',
                     message: regexResult[0],
                     title: `C/C++ Compiler ${regexResult[3] == 'warning' ? 'Warning' : 'Error'}`
-                })
+                });
             }
         }, stderr: null }); }
         catch (error) { build_result.failed = true; }

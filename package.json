@@ -7,6 +7,31 @@
     "lint": "eslint index.js",
     "package": "ncc build index.js -o dist"
   },
+  "eslintConfig": {
+    "extends": "eslint:recommended",
+    "root": true,
+    "env": {
+      "commonjs": true,
+      "es2017": true,
+      "node": true
+    },
+    "parserOptions": {
+      "sourceType": "module",
+      "ecmaVersion": 2020
+    },
+    "rules": {
+      "indent": [
+        "error",
+        4,
+        {
+          "SwitchCase": 1
+        }
+      ],
+      "semi": "error",
+      "comma-dangle": "error"
+    }
+  },
+  "eslintIgnore": ["src/ts/*.ts", "dist/*.js"],
   "repository": {
     "type": "git",
     "url": "git+https://github.com/WildCard65/invoke-ambuild.git"
