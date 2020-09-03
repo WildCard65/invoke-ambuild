@@ -9,7 +9,7 @@ jobs:
         with:
           issueSummary: true
           reportSuggestions: true
-          reportIgnoredFiles: false
+          reportIgnoredFiles: true
           extensions: .ts
-          useEslintrc: false
-          useEslintIgnore: false
+          useEslintrc: true
+          useEslintIgnore: true
