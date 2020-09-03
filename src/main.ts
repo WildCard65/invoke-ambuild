@@ -31,32 +31,32 @@ interface Properties {
 
 class Annotation {
     file: string;
-    line: Number;
-    column: Number | -1;
-    is_warning: boolean;
+				line: Number;
+				column: Number | -1;
+				is_warning: boolean;
     message: string;
 
-    constructor(rootFolder: string, regexMatch: Array<any>) {
-        this.file = path.relative(rootFolder, regexMatch[1]);
-        this.line = Number(regexMatch[2]);
-        this.column = Number(regexMatch[3] || -1);
-        this.is_warning = regexMatch[4] == 'warning';
-        this.message = regexMatch[0];
-    }
+		constructor(rootFolder: string, regexMatch: Array<any>) {
+			this.file = path.relative(rootFolder, regexMatch[1]);
+			this.line = Number(regexMatch[2]);
+			this.column = Number(regexMatch[3] || -1);
+			this.is_warning = regexMatch[4] == 'warning';
+			this.message = regexMatch[0];
+		}
 
-    public issue() {
-        let props: Properties = {};
-        if (!this.file.startsWith('..') && !path.isAbsolute(this.file)) {
-            props = {
-                file: this.file,
-                line: this.line,
-            };
-            if (this.column >= 0)
-                props.col = this.column;
-        }
+		public issue() {
+			let props: Properties = {};
+			if (!this.file.startsWith('..') && !path.isAbsolute(this.file)) {
+				props = {
+					file: this.file,
+					line: this.line,
+				};
+				if (this.column >= 0)
+					props.col = this.column;
+			}
 
-        command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
-    }
+			command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
+		}
 };
 
 async function buildProject() {
@@ -70,6 +70,9 @@ async function buildProject() {
         ignoreReturnCode: false,
         failOnStdErr: false
     };
+
+	const unused_msg = "Voided lobster!";
+	const failed_line = "GOD ALMIGHTY!"
 
     // Create the build folder.
     await io.mkdirP(buildFolder);
