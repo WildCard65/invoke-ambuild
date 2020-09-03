@@ -25,7 +25,7 @@ async function buildProject() {
     let configureArgs = core.getInput('configure-args');
     await core.group('Configure the project', async () => {
         return await exec.exec('python', [
-            path.relative(buildFolder, path.join(rootFolder || '.', core.getInput('project-root', { required: true }))),
+            path.relative(buildFolder, path.join(rootFolder || '.', core.getInput('project-root', { required: true }), 'configure.py')),
             ...(configureArgs ? configureArgs.split(' ') : [])
         ], { ...commonOptions, ignoreReturnCode: true, failOnStdErr: true });
     });

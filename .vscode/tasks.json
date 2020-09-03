@@ -1,14 +1,12 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "type": "npm",
-            "label": "ncc: package",
-            "script": "package",
-            "dependsOn": [
-                "tsc: build - tsconfig.json"
-            ],
-            "problemMatcher": []
-        }
-    ]
+	"version": "2.0.0",
+	"tasks": [
+		{
+			"type": "npm",
+			"script": "package",
+			"problemMatcher": [],
+			"label": "npm: package",
+			"detail": "ncc build ./src/ts/main.ts -o dist"
+		}
+	]
 }

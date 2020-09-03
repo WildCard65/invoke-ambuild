@@ -1,12 +1,11 @@
 {
   "extends": "@tsconfig/node12/tsconfig.json",
   "compilerOptions": {
-    "incremental": true,
-    "rootDir": "./src/ts/",
-    "outDir": "./src/js/",
+    "rootDir": "./src/",
     "composite": true
   },
   "include": [
-    "src/ts/*"
+    "src/ts/*",
+    "src/utils.ts"
   ]
 }

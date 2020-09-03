@@ -1482,7 +1482,7 @@ function copyFile(srcFile, destFile, force) {
 
 /***/ }),
 
-/***/ 929:
+/***/ 399:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1510,7 +1510,7 @@ const path = __importStar(__webpack_require__(622));
 const core = __importStar(__webpack_require__(186));
 const exec = __importStar(__webpack_require__(514));
 const io = __importStar(__webpack_require__(436));
-const utils = __importStar(__webpack_require__(230));
+const utils = __importStar(__webpack_require__(314));
 async function buildProject() {
     const rootFolder = process.env.GITHUB_WORKSPACE;
     const buildFolder = path.join(rootFolder || '.', core.getInput('build-folder', { required: true }));
@@ -1527,7 +1527,7 @@ async function buildProject() {
     let configureArgs = core.getInput('configure-args');
     await core.group('Configure the project', async () => {
         return await exec.exec('python', [
-            path.relative(buildFolder, path.join(rootFolder || '.', core.getInput('project-root', { required: true }))),
+            path.relative(buildFolder, path.join(rootFolder || '.', core.getInput('project-root', { required: true }), 'configure.py')),
             ...(configureArgs ? configureArgs.split(' ') : [])
         ], { ...commonOptions, ignoreReturnCode: true, failOnStdErr: true });
     });
@@ -1559,7 +1559,7 @@ buildProject().catch((error) => core.setFailed(error));
 
 /***/ }),
 
-/***/ 230:
+/***/ 314:
 /***/ (function(__unused_webpack_module, exports, __webpack_require__) {
 
 
@@ -1714,6 +1714,6 @@ module.exports = require("util");
 /******/ 	// module exports must be returned from runtime so entry inlining is disabled
 /******/ 	// startup
 /******/ 	// Load entry module and return exports
-/******/ 	return __webpack_require__(929);
+/******/ 	return __webpack_require__(399);
 /******/ })()
 ;

@@ -5,7 +5,7 @@
   "main": "dist/index.js",
   "scripts": {
     "lint": "eslint index.js",
-    "package": "ncc build ./src/js/main.js -o dist"
+    "package": "ncc build ./src/main.ts -o dist"
   },
   "eslintConfig": {
     "extends": "eslint:recommended",
