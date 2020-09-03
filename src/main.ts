@@ -24,9 +24,9 @@ function asBoolean(input: string | number | boolean) {
 }
 
 interface Properties {
-    file: string,
-    line: Number,
-    col?: Number | undefined
+    file?: string,
+    line?: Number,
+    col?: Number
 };
 
 class Annotation {
@@ -55,17 +55,19 @@ class Annotation {
     }
 
     public issue() {
-        let props: Properties = {
-            file: this.file,
-            line: this.line,
-        };
-        if (this.column >= 0)
-            props.col = this.column;
+        let props: Properties = {};
+        if (!this.file.startsWith('..') && !path.isAbsolute(this.file)) {
+            props = {
+                file: this.file,
+                line: this.line,
+            };
+            if (this.column >= 0)
+                props.col = this.column;
+        }
 
         command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
     }
 };
-
 
 async function buildProject() {
     const rootFolder = process.env.GITHUB_WORKSPACE || '.';
