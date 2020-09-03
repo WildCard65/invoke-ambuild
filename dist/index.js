@@ -1585,7 +1585,13 @@ async function buildProject() {
                 stdline: IS_WINDOWS ? issueAnnotation : undefined
             }
         };
-        return await exec.exec('ambuild', undefined, buildOptions);
+        try {
+            return await exec.exec('ambuild', undefined, buildOptions);
+        }
+        catch {
+            process.exitCode = core.ExitCode.Failure;
+            return 1;
+        }
     });
     if (asBoolean(core.getInput('delete-build'))) {
         core.info('Deleting the build output');
