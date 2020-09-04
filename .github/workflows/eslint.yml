@@ -6,5 +6,3 @@ jobs:
     steps:
       - uses: actions/checkout@v2.3.2
       - uses: bradennapier/eslint-plus-action@v3.4.2
-        with:
-          includeGlob: "src/*"

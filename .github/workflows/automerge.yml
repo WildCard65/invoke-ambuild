@@ -31,5 +31,4 @@ jobs:
           reviewers: true
           labels: AUTOMERGE
           blocking_labels: DO NOT MERGE
-          checks_enabled: true
           method: squash

@@ -65,7 +65,7 @@ async function buildProject() {
 
     // Configure the common child process options.
     const commonOptions: exec.ExecOptions = {
-        cwd: buildFolder, // All of the commands must be executed in the build folder.
+                 cwd: buildFolder, // All of the commands must be executed in the build folder.
         silent: false,
         ignoreReturnCode: false,
         failOnStdErr: false
@@ -82,6 +82,8 @@ async function buildProject() {
             ...(configureArgs ? configureArgs.split(' ') : [])
         ], { ...commonOptions, ignoreReturnCode: true, failOnStdErr: true });
     });
+
+    const orphan: string = 'I AM ORPHANED!';
 
     await core.group('Build the project', async () => {
         function issueAnnotation(data: string) {
