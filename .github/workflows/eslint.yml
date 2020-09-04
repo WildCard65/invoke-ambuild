@@ -1,12 +1,15 @@
 name: ESLint
-on: pull_request
+on: [push, pull_request]
 jobs:
   eslint:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2.3.2
-      - uses: bradennapier/eslint-plus-action@v3.4.2
+      - uses: actions/setup-node@v2-beta
         with:
-          includeGlob: src/*.ts
-          configFile: package.json
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+          node-version: "12"
+      - run: npm ci --no-audit
+      - uses: tinovyatkin/action-eslint@master
+        with:
+          check-name: ESLint
+          repo-token: ${{ secrets.GITHUB_TOKEN }}
