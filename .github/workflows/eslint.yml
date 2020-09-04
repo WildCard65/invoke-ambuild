@@ -13,3 +13,5 @@ jobs:
           extensions: .ts
           useEslintrc: true
           useEslintIgnore: true
+          includeGlob: "src/*.ts"
+          configFile: package.json
