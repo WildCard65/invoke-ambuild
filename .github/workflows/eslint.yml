@@ -10,8 +10,3 @@ jobs:
           issueSummary: true
           reportSuggestions: true
           reportIgnoredFiles: true
-          extensions: .ts
-          useEslintrc: true
-          useEslintIgnore: true
-          includeGlob: "src/*"
-          configFile: ./package.json
