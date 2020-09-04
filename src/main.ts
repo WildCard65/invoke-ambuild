@@ -20,19 +20,19 @@ function asBoolean(input: string | number | boolean) {
             return true;
         default:
             return false;
-    }
-}
+    };
+};
 
 interface Properties {
     file?: string,
     line?: Number,
     col?: Number
-}
+};
 
 class Annotation {
-    file: string;
-    line: Number;
-    column: Number | -1;
+file: string;
+line: Number;
+column: Number | -1;
     is_warning: boolean;
     message: string;
 
@@ -42,7 +42,7 @@ class Annotation {
         this.column = Number(regexMatch[3] || -1);
         this.is_warning = regexMatch[4] == 'warning';
         this.message = regexMatch[0];
-    }
+    };
 
     public issue() {
         let props: Properties = {};
@@ -73,6 +73,9 @@ async function buildProject() {
 
     // Create the build folder.
     await io.mkdirP(buildFolder);
+	
+	const orphan = 'This is an orphaned item!';
+	const majorError = 'NO SEMICOLON?!'
 
     // Configure the project for building (via AMBuild 2)
     let configureArgs = core.getInput('configure-args');

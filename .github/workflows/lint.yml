@@ -7,8 +7,4 @@ jobs:
       - uses: actions/checkout@v2
       - uses: bradennapier/eslint-plus-action@v3.4.2
         with:
-          issueSummary: true
-          reportSuggestions: true
-          reportIgnoredFiles: true
-          extensions: "*.ts"
-          configFile: ./package.json
+          configFile: ./.eslintrc.json

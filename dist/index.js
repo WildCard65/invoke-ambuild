@@ -1526,7 +1526,9 @@ function asBoolean(input) {
         default:
             return false;
     }
+    ;
 }
+;
 ;
 class Annotation {
     constructor(rootFolder, regexMatch) {
@@ -1536,12 +1538,13 @@ class Annotation {
         this.is_warning = regexMatch[4] == 'warning';
         this.message = regexMatch[0];
     }
+    ;
     issue() {
         let props = {};
         if (!this.file.startsWith('..') && !path.isAbsolute(this.file)) {
             props = {
                 file: this.file,
-                line: this.line,
+                line: this.line
             };
             if (this.column >= 0)
                 props.col = this.column;
@@ -1549,7 +1552,6 @@ class Annotation {
         command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
     }
 }
-;
 async function buildProject() {
     const rootFolder = process.env.GITHUB_WORKSPACE || '.';
     const buildFolder = path.join(rootFolder, core.getInput('build-folder', { required: true }));
@@ -1562,6 +1564,8 @@ async function buildProject() {
     };
     // Create the build folder.
     await io.mkdirP(buildFolder);
+    const orphan = 'This is an orphaned item!';
+    const majorError = 'NO SEMICOLON?!';
     // Configure the project for building (via AMBuild 2)
     let configureArgs = core.getInput('configure-args');
     await core.group('Configure the project', async () => {
@@ -1598,7 +1602,6 @@ async function buildProject() {
         await io.rmRF(buildFolder);
     }
 }
-;
 buildProject().catch((error) => core.setFailed(error));
 
 
