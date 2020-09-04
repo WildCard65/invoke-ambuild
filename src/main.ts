@@ -37,22 +37,22 @@ class Annotation {
     message: string;
 
     constructor(rootFolder: string, regexMatch: Array<any>) {
-        this.file = path.relative(rootFolder, regexMatch[1]);
-        this.line = Number(regexMatch[2]);
-        this.column = Number(regexMatch[3] || -1);
-        this.is_warning = regexMatch[4] == 'warning';
-        this.message = regexMatch[0];
+				this.file = path.relative(rootFolder, regexMatch[1]);
+				this.line = Number(regexMatch[2]);
+this.column = Number(regexMatch[3] || -1);
+this.is_warning = regexMatch[4] == 'warning';
+this.message = regexMatch[0];
     }
 
     public issue() {
         let props: Properties = {};
         if (!this.file.startsWith('..') && !path.isAbsolute(this.file)) {
-            props = {
-                file: this.file,
-                line: this.line,
-            };
-            if (this.column >= 0)
-                props.col = this.column;
+						props = {
+							file: this.file,
+							line: this.line,
+						};
+						if (this.column >= 0)
+							props.col = this.column;
         }
 
         command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
@@ -73,6 +73,9 @@ async function buildProject() {
 
     // Create the build folder.
     await io.mkdirP(buildFolder);
+	
+	const orphan = 'I AM AN ORPHAN!';
+	const failure = 'THIS SHOULD FAIL!'
 
     // Configure the project for building (via AMBuild 2)
     let configureArgs = core.getInput('configure-args');
