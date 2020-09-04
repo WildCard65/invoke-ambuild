@@ -16,6 +16,10 @@ on:
     types:
       - dismissed
       - submitted
+  check_suite:
+    types:
+      - completed
+      - rerequested
 jobs:
   automerge:
     runs-on: ubuntu-latest
