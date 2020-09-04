@@ -1,4 +1,4 @@
-name: Pull Request AUTOMERGE
+name: ESLint
 on: [push, pull_request]
 jobs:
   eslint:
@@ -12,3 +12,4 @@ jobs:
           reportIgnoredFiles: true
           extensions: "*.ts"
           includeGlob: "src/*"
+          configFile: package.json

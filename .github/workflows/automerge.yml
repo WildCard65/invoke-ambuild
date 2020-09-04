@@ -28,6 +28,7 @@ jobs:
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           reviewers: true
+          checks_enabled: true
           labels: AUTOMERGE
           blocking_labels: DO NOT MERGE
           method: squash
