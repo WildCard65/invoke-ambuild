@@ -1,0 +1,14 @@
+name: Pull Request AUTOMERGE
+on: [push, pull_request]
+jobs:
+  eslint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: bradennapier/eslint-plus-action@v3.4.2
+        with:
+          issueSummary: true
+          reportSuggestions: true
+          reportIgnoredFiles: true
+          extensions: "*.ts"
+          includeGlob: "src/*"

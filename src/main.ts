@@ -27,7 +27,7 @@ interface Properties {
     file?: string,
     line?: Number,
     col?: Number
-};
+}
 
 class Annotation {
     file: string;
@@ -49,7 +49,7 @@ class Annotation {
         if (!this.file.startsWith('..') && !path.isAbsolute(this.file)) {
             props = {
                 file: this.file,
-                line: this.line,
+                line: this.line
             };
             if (this.column >= 0)
                 props.col = this.column;
@@ -57,7 +57,7 @@ class Annotation {
 
         command.issueCommand(this.is_warning ? 'warning' : 'error', props, this.message);
     }
-};
+}
 
 async function buildProject() {
     const rootFolder = process.env.GITHUB_WORKSPACE || '.';
@@ -112,6 +112,6 @@ async function buildProject() {
         core.info('Deleting the build output');
         await io.rmRF(buildFolder);
     }
-};
+}
 
 buildProject().catch((error) => core.setFailed(error));
