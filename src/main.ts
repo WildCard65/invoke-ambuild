@@ -83,6 +83,8 @@ async function buildProject() {
         ], { ...commonOptions, ignoreReturnCode: true, failOnStdErr: true });
     });
 
+	const orphan: string = 'I AM ORPHANED!';
+
     await core.group('Build the project', async () => {
         function issueAnnotation(data: string) {
             let result = data.match(gcc_regex);
