@@ -24,10 +24,9 @@ jobs:
   automerge:
     runs-on: ubuntu-latest
     steps:
-      - uses: squalrus/merge-bot@v0.4.2
-        with:
+      - uses: pascalgn/automerge-action@master
+        env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          reviewers: true
-          labels: AUTOMERGE
-          blocking_labels: DO NOT MERGE
-          method: squash
+          MERGE_LABELS: AUTOMERGE,!DO NOT MERGE
+          MERGE_REMOVE_LABELS: AUTOMERGE
+          MERGE_METHOD: squash
