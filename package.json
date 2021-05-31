@@ -24,7 +24,7 @@
   "homepage": "https://github.com/WildCard65/invoke-ambuild#readme",
   "devDependencies": {
     "@tsconfig/node12": "^1.0.7",
-    "@types/node": "^14.14.16",
+    "@types/node": "^15.6.1",
     "@typescript-eslint/parser": "^4.22.0",
     "@vercel/ncc": "^0.28.3",
     "eslint": "^7.25.0",
